@@ -14,7 +14,8 @@ _Effortlessly manage multiple GitHub accounts from your desktop_
 <br>
 
 <div>
-   [!GitSwitch Image](![image](https://github.com/user-attachments/assets/bb0d0007-e3af-4b3a-b6f6-30c5a81bca35)
+   ![image](https://github.com/user-attachments/assets/247e563a-4e96-44cc-89ae-7a077cde1099)
+
 )
 </div>
 
