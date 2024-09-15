@@ -13,7 +13,7 @@ _Effortlessly manage multiple GitHub accounts from your desktop_
 
 
 <br>
-![Untitled](https://github.com/user-attachments/assets/24ef7ab3-10ab-4227-b748-a54029ce270d)
+![Image](https://github.com/user-attachments/assets/24ef7ab3-10ab-4227-b748-a54029ce270d)
 
 
 
