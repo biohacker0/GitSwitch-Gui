@@ -13,11 +13,8 @@ _Effortlessly manage multiple GitHub accounts from your desktop_
 
 <br>
 
-<div>
-   ![image](https://github.com/user-attachments/assets/247e563a-4e96-44cc-89ae-7a077cde1099)
+![image](https://github.com/user-attachments/assets/926045c2-4d27-4563-b1e1-e58014a39a87)
 
-)
-</div>
 
 GitSwitch-Gui is a powerful desktop application that simplifies the management of multiple GitHub accounts. Built with Tauri and React with rust, it offers a seamless experience for developers who need to switch between different GitHub identities effortlessly.
 
