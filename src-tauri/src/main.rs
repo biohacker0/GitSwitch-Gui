@@ -1,4 +1,4 @@
-#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+#![cfg_attr(all(not(debug_assertions), target_os = "windows"), windows_subsystem = "windows")]
 
 use rusqlite::{Connection, Result as SqliteResult, params};
 use serde::{Deserialize, Serialize};
@@ -59,11 +59,15 @@ fn init_db() -> SqliteResult<()> {
 }
 
 fn run_git_command(args: &[&str]) -> Result<String, String> {
-    let output = Command::new("git")
-        .args(args)
-        .creation_flags(0x08000000) // CREATE_NO_WINDOW flag
-        .output()
-        .map_err(|e| e.to_string())?;
+    let mut command = Command::new("git");
+    command.args(args);
+    
+    #[cfg(target_os = "windows")]
+    {
+        command.creation_flags(0x08000000); // CREATE_NO_WINDOW flag
+    }
+
+    let output = command.output().map_err(|e| e.to_string())?;
 
     if output.status.success() {
         Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
@@ -84,10 +88,15 @@ fn generate_ssh_key(email: &str) -> Result<(Vec<u8>, Vec<u8>), String> {
     fs::remove_file(&private_key_path).ok();
     fs::remove_file(&public_key_path).ok();
 
-    Command::new("ssh-keygen")
-        .args(&["-t", "ed25519", "-f", private_key_path.to_str().unwrap(), "-N", "", "-C", email])
-        .creation_flags(0x08000000) // CREATE_NO_WINDOW
-        .stdout(std::process::Stdio::null())
+    let mut command = Command::new("ssh-keygen");
+    command.args(&["-t", "ed25519", "-f", private_key_path.to_str().unwrap(), "-N", "", "-C", email]);
+
+    #[cfg(target_os = "windows")]
+    {
+        command.creation_flags(0x08000000); // CREATE_NO_WINDOW
+    }
+
+    command.stdout(std::process::Stdio::null())
         .stderr(std::process::Stdio::null())
         .output()
         .map_err(|e| e.to_string())?;
