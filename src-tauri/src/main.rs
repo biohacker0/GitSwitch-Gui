@@ -7,6 +7,9 @@ use std::path::PathBuf;
 use std::process::Command;
 use dirs;
 use tauri::Manager;
+
+// Only import CommandExt on Windows
+#[cfg(target_os = "windows")]
 use std::os::windows::process::CommandExt;
 
 
@@ -59,20 +62,33 @@ fn init_db() -> SqliteResult<()> {
 }
 
 fn run_git_command(args: &[&str]) -> Result<String, String> {
-    let mut command = Command::new("git");
-    command.args(args);
-    
     #[cfg(target_os = "windows")]
     {
-        command.creation_flags(0x08000000); // CREATE_NO_WINDOW flag
+        let output = Command::new("git")
+            .args(args)
+            .creation_flags(0x08000000) // CREATE_NO_WINDOW flag
+            .output()
+            .map_err(|e| e.to_string())?;
+
+        if output.status.success() {
+            Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
+        } else {
+            Err(String::from_utf8_lossy(&output.stderr).trim().to_string())
+        }
     }
 
-    let output = command.output().map_err(|e| e.to_string())?;
+    #[cfg(not(target_os = "windows"))]
+    {
+        let output = Command::new("git")
+            .args(args)
+            .output()
+            .map_err(|e| e.to_string())?;
 
-    if output.status.success() {
-        Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
-    } else {
-        Err(String::from_utf8_lossy(&output.stderr).trim().to_string())
+        if output.status.success() {
+            Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
+        } else {
+            Err(String::from_utf8_lossy(&output.stderr).trim().to_string())
+        }
     }
 }
 
@@ -88,18 +104,26 @@ fn generate_ssh_key(email: &str) -> Result<(Vec<u8>, Vec<u8>), String> {
     fs::remove_file(&private_key_path).ok();
     fs::remove_file(&public_key_path).ok();
 
-    let mut command = Command::new("ssh-keygen");
-    command.args(&["-t", "ed25519", "-f", private_key_path.to_str().unwrap(), "-N", "", "-C", email]);
-
     #[cfg(target_os = "windows")]
     {
-        command.creation_flags(0x08000000); // CREATE_NO_WINDOW
+        Command::new("ssh-keygen")
+            .args(&["-t", "ed25519", "-f", private_key_path.to_str().unwrap(), "-N", "", "-C", email])
+            .creation_flags(0x08000000) // CREATE_NO_WINDOW
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null())
+            .output()
+            .map_err(|e| e.to_string())?;
     }
 
-    command.stdout(std::process::Stdio::null())
-        .stderr(std::process::Stdio::null())
-        .output()
-        .map_err(|e| e.to_string())?;
+    #[cfg(not(target_os = "windows"))]
+    {
+        Command::new("ssh-keygen")
+            .args(&["-t", "ed25519", "-f", private_key_path.to_str().unwrap(), "-N", "", "-C", email])
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null())
+            .output()
+            .map_err(|e| e.to_string())?;
+    }
 
     let private_key = fs::read(&private_key_path).map_err(|e| e.to_string())?;
     let public_key = fs::read(&public_key_path).map_err(|e| e.to_string())?;
